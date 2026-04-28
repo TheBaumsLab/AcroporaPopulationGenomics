@@ -17,7 +17,7 @@ Distance
 
 IBD statistics
     build_symmetric_pair_matrix
-    mantel_test_pearson
+    mantel_test
     compute_ibd_stats_from_long_df
 
 Tract ordering
@@ -37,11 +37,12 @@ import allel
 import numpy as np
 import pandas as pd
 from scipy import stats
+from skbio.stats.distance import DistanceMatrix
+from skbio.stats.distance import mantel as _skbio_mantel
 
 
-# ---------------------------------------------------------------------------
+#####
 # Genotype conversion
-# ---------------------------------------------------------------------------
 
 def dosage_to_genotype_array(gn: np.ndarray) -> allel.GenotypeArray:
     """
@@ -58,9 +59,8 @@ def dosage_to_genotype_array(gn: np.ndarray) -> allel.GenotypeArray:
     return allel.GenotypeArray(gt)
 
 
-# ---------------------------------------------------------------------------
+#####
 # FST
-# ---------------------------------------------------------------------------
 
 def fst_pair_with_nloci(
     gta: allel.GenotypeArray,
@@ -168,9 +168,8 @@ def fst_mat_to_nm_long(
     return pd.DataFrame(rows)
 
 
-# ---------------------------------------------------------------------------
+#####
 # Distance
-# ---------------------------------------------------------------------------
 
 def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     """Great-circle distance in km between two (lat, lon) points."""
@@ -183,118 +182,8 @@ def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     )
     return R * 2 * atan2(sqrt(a), sqrt(1 - a))
 
-
-# ---------------------------------------------------------------------------
-# IBD statistics
-# ---------------------------------------------------------------------------
-
-def build_symmetric_pair_matrix(
-    df: pd.DataFrame,
-    value_col: str,
-    site1_col: str = "site1",
-    site2_col: str = "site2",
-) -> pd.DataFrame:
-    """
-    Build a symmetric square matrix from a long pairwise DataFrame.
-    Diagonal is set to 0.
-    """
-    sites = sorted(set(df[site1_col]).union(df[site2_col]))
-    mat = pd.DataFrame(np.nan, index=sites, columns=sites, dtype=float)
-    for _, row in df.iterrows():
-        s1, s2, val = row[site1_col], row[site2_col], row[value_col]
-        mat.loc[s1, s2] = val
-        mat.loc[s2, s1] = val
-    np.fill_diagonal(mat.values, 0.0)
-    return mat
-
-
-def mantel_test_pearson(
-    x_mat: pd.DataFrame,
-    y_mat: pd.DataFrame,
-    n_perm: int = 10_000,
-    seed: int = 42,
-) -> tuple[float, float]:
-    """
-    Mantel test using Pearson correlation on the upper triangle.
-
-    Returns
-    -------
-    r_obs : float
-        Observed correlation.
-    p_perm : float
-        Two-tailed permutation p-value.
-    """
-    rng = np.random.default_rng(seed)
-    x = x_mat.to_numpy(dtype=float)
-    y = y_mat.to_numpy(dtype=float)
-
-    iu = np.triu_indices_from(x, k=1)
-    x_vec, y_vec = x[iu], y[iu]
-    valid = np.isfinite(x_vec) & np.isfinite(y_vec)
-    x_vec, y_vec = x_vec[valid], y_vec[valid]
-
-    if len(x_vec) < 2:
-        return np.nan, np.nan
-
-    r_obs = stats.pearsonr(x_vec, y_vec).statistic
-    n = x.shape[0]
-    perm_rs = np.empty(n_perm, dtype=float)
-    for i in range(n_perm):
-        perm = rng.permutation(n)
-        y_perm_vec = y[perm][:, perm][iu][valid]
-        perm_rs[i] = stats.pearsonr(x_vec, y_perm_vec).statistic
-
-    p_perm = (np.sum(np.abs(perm_rs) >= np.abs(r_obs)) + 1) / (n_perm + 1)
-    return float(r_obs), float(p_perm)
-
-
-def compute_ibd_stats_from_long_df(
-    df: pd.DataFrame,
-    x_col: str = "geo_dist_km",
-    y_col: str = "linearized_fst",
-    site1_col: str = "site1",
-    site2_col: str = "site2",
-    n_perm: int = 10_000,
-    seed: int = 42,
-) -> dict:
-    """
-    Compute OLS (slope, intercept, R², p) and Mantel (r, p) statistics
-    from a long pairwise IBD DataFrame.
-    """
-    x = df[x_col].to_numpy(dtype=float)
-    y = df[y_col].to_numpy(dtype=float)
-    valid = np.isfinite(x) & np.isfinite(y)
-    x, y = x[valid], y[valid]
-
-    if len(x) < 2:
-        return {
-            "x_col": x_col, "n_pairs": len(x),
-            "slope": np.nan, "intercept": np.nan,
-            "ols_r2": np.nan, "ols_p": np.nan,
-            "mantel_r": np.nan, "mantel_p": np.nan,
-        }
-
-    ols = stats.linregress(x, y)
-    dist_mat = build_symmetric_pair_matrix(df, x_col, site1_col=site1_col, site2_col=site2_col)
-    fst_mat = build_symmetric_pair_matrix(df, y_col, site1_col=site1_col, site2_col=site2_col)
-    common = dist_mat.index.intersection(fst_mat.index)
-    mantel_r, mantel_p = mantel_test_pearson(
-        dist_mat.loc[common, common],
-        fst_mat.loc[common, common],
-        n_perm=n_perm, seed=seed,
-    )
-
-    return {
-        "x_col": x_col, "n_pairs": len(x),
-        "slope": ols.slope, "intercept": ols.intercept,
-        "ols_r2": ols.rvalue ** 2, "ols_p": ols.pvalue,
-        "mantel_r": mantel_r, "mantel_p": mantel_p,
-    }
-
-
-# ---------------------------------------------------------------------------
+#####
 # Tract ordering
-# ---------------------------------------------------------------------------
 
 def add_tract_positions(
     df: pd.DataFrame,
@@ -358,10 +247,106 @@ def order_sites_greedy_nn(
         site_col=site_col, lat_col=lat_col, lon_col=lon_col,
     )
 
+#####
+# IBD statistics
 
-# ---------------------------------------------------------------------------
+def build_symmetric_pair_matrix(
+    df: pd.DataFrame,
+    value_col: str,
+    site1_col: str = "site1",
+    site2_col: str = "site2",
+) -> pd.DataFrame:
+    """
+    Build a symmetric square matrix from a long pairwise DataFrame.
+    Diagonal is set to 0.
+    """
+    sites = sorted(set(df[site1_col]).union(df[site2_col]))
+    mat = pd.DataFrame(np.nan, index=sites, columns=sites, dtype=float)
+    for _, row in df.iterrows():
+        s1, s2, val = row[site1_col], row[site2_col], row[value_col]
+        mat.loc[s1, s2] = val
+        mat.loc[s2, s1] = val
+    np.fill_diagonal(mat.values, 0.0)
+    return mat
+
+
+def mantel_test(
+    x_mat: pd.DataFrame,
+    y_mat: pd.DataFrame,
+    n_perm: int = 10_000,
+    method: str = "pearson",
+) -> tuple[float, float]:
+    """
+    Mantel test via scikit-bio.
+
+    Parameters
+    ----------
+    x_mat, y_mat : pd.DataFrame
+        Symmetric square distance matrices with matching indices.
+    n_perm : int
+        Number of permutations.
+    method : str
+        Correlation method — "pearson" or "spearman".
+
+    Returns
+    -------
+    r : float
+        Observed correlation.
+    p : float
+        Two-tailed permutation p-value.
+    """
+    ids = x_mat.index.astype(str).tolist()
+    x_dm = DistanceMatrix(x_mat.to_numpy(dtype=float), ids=ids)
+    y_dm = DistanceMatrix(y_mat.to_numpy(dtype=float), ids=ids)
+    r, p, _ = _skbio_mantel(x_dm, y_dm, method=method,
+                             permutations=n_perm, strict=True)
+    return float(r), float(p)
+
+
+def compute_ibd_stats_from_long_df(
+    df: pd.DataFrame,
+    x_col: str = "geo_dist_km",
+    y_col: str = "linearized_fst",
+    site1_col: str = "site1",
+    site2_col: str = "site2",
+    n_perm: int = 10_000,
+) -> dict:
+    """
+    Compute OLS (slope, intercept, R², p) and Mantel (r, p) statistics
+    from a long pairwise IBD DataFrame.
+    """
+    x = df[x_col].to_numpy(dtype=float)
+    y = df[y_col].to_numpy(dtype=float)
+    valid = np.isfinite(x) & np.isfinite(y)
+    x, y = x[valid], y[valid]
+
+    if len(x) < 2:
+        return {
+            "x_col": x_col, "n_pairs": len(x),
+            "slope": np.nan, "intercept": np.nan,
+            "ols_r2": np.nan, "ols_p": np.nan,
+            "mantel_r": np.nan, "mantel_p": np.nan,
+        }
+
+    ols = stats.linregress(x, y)
+    dist_mat = build_symmetric_pair_matrix(df, x_col, site1_col=site1_col, site2_col=site2_col)
+    fst_mat = build_symmetric_pair_matrix(df, y_col, site1_col=site1_col, site2_col=site2_col)
+    common = dist_mat.index.intersection(fst_mat.index)
+    mantel_r, mantel_p = mantel_test(
+        dist_mat.loc[common, common],
+        fst_mat.loc[common, common],
+        n_perm=n_perm,
+    )
+
+    return {
+        "x_col": x_col, "n_pairs": len(x),
+        "slope": ols.slope, "intercept": ols.intercept,
+        "ols_r2": ols.rvalue ** 2, "ols_p": ols.pvalue,
+        "mantel_r": mantel_r, "mantel_p": mantel_p,
+    }
+
+#####
 # Site-name harmonization
-# ---------------------------------------------------------------------------
 
 def assign_florida_name_family(name) -> str:
     """
