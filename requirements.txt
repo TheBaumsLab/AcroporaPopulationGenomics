@@ -1,0 +1,17 @@
+# Requirements for apal-popgen manuscript code
+# Python 3.14
+# Install: pip install -r requirements.txt
+#
+# External tool (not pip-installable):
+#   bcftools >= 1.17  — required by convert_vcf_to_npz.py
+#   Install via conda:  conda install -c bioconda bcftools
+#   Install via brew:   brew install bcftools
+
+numpy==2.4.1
+pandas==2.3.3
+scipy==1.17.1
+matplotlib==3.10.8
+seaborn==0.13.2
+plotly==6.6.0
+scikit-allel==1.3.13
+jupyterlab==4.5.4
