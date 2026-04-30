@@ -8,3 +8,5 @@ __pycache__/
 .ipynb_checkpoints/
 notebooks/_bin/
 **/__pycache__/
+popgen_notebooks/_bin/
+**/__pycache__/
