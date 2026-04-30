@@ -6,3 +6,5 @@ __pycache__/
 *.tsv
 *.vcf.gz
 .ipynb_checkpoints/
+notebooks/_bin/
+**/__pycache__/

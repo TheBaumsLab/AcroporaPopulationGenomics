@@ -15,17 +15,15 @@ FST
 Distance
     haversine_km
 
+Tract ordering
+    add_tract_positions
+    order_sites_greedy_nn
+
 IBD statistics
     build_symmetric_pair_matrix
     mantel_test
     compute_ibd_stats_from_long_df
 
-Tract ordering
-    add_tract_positions
-    order_sites_greedy_nn
-
-Site-name harmonization
-    assign_florida_name_family
 """
 from __future__ import annotations
 
@@ -344,58 +342,3 @@ def compute_ibd_stats_from_long_df(
         "ols_r2": ols.rvalue ** 2, "ols_p": ols.pvalue,
         "mantel_r": mantel_r, "mantel_p": mantel_p,
     }
-
-#####
-# Site-name harmonization
-
-def assign_florida_name_family(name) -> str:
-    """
-    Collapse Florida reef-name variants into a single canonical site label.
-    Based on regex/keyword matching of known naming conventions in the dataset.
-    Returns the original name unchanged if no rule matches.
-    """
-    if pd.isna(name):
-        return "Unknown"
-
-    s = re.sub(r"[^a-z0-9]+", " ", str(name).strip().lower()).strip()
-
-    rules = [
-        ("sand key",       "Sand Key"),
-        ("sand island",    "Sand Island"),
-        ("si3",            "Sand Island"),
-        ("sambo",          "Sambo"),
-        ("elbow",          "Elbow"),
-        ("el2",            "Elbow"),
-        ("looe",           "Looe"),
-        ("biscayne",       "Biscayne"),
-        ("conch",          "Conch"),
-        ("crf",            "Conch"),
-        ("fowey",          "Fowey"),
-        ("french",         "French Reef"),
-        ("fr2",            "French Reef"),
-        ("grecian",        "Grecian Rocks"),
-        ("gr1",            "Grecian Rocks"),
-        ("horseshoe",      "Horseshoe"),
-        ("brew",           "Brewster"),
-        ("marker3",        "Marker3"),
-        ("marker 3",       "Marker3"),
-        ("ball buoy",      "Ball Buoy"),
-        ("ballbuoy",       "Ball Buoy"),
-        ("ball paul",      "Ball Buoy"),
-        ("carysfort",      "Carysfort"),
-        ("cf2",            "Carysfort"),
-        ("molasses",       "Molasses"),
-        ("ml3",            "Molasses"),
-        ("snapledge",      "Snapper Ledge"),
-        ("kl4",            "Dry Rocks"),
-        ("dry rocks",      "Dry Rocks"),
-        ("triple a",       "Triple A"),
-        ("watson",         "Watson"),
-        ("trtlrks",        "Turtle Rocks"),
-        ("mote",           "Mote"),
-    ]
-    for keyword, canonical in rules:
-        if keyword in s:
-            return canonical
-
-    return str(name)
