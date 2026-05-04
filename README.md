@@ -28,8 +28,8 @@ The manuscript describes six datasets produced by progressive filtering of the r
 
 | File | Dataset | Description |
 |---|---|---|
-| `allsamples_lifted_to_jaAcrPala1.3_conffiltered_indvmissfiltered_downsampled_maffiltered_ldfiltered.vcf.gz` | Dataset 4 | Fully filtered: recommended probes, CONF > 0.01 removed, site/sample missingness, LD-pruned (R² < 0.5 / 100 kb), MAF > 0.05, geographically downsampled (≤ 60 genets/region). 3,215 SNPs, 554 genets. Used for PCA, STRUCTURE, ADMIXTURE, FEEMS, FST, heterozygosity, and inbreeding. |
-| `allsamples_lifted_to_jaAcrPala1.3_noconf_indvmissfiltered_maffiltered.vcf.gz` | Dataset 6 | No CONF filter. Otherwise same as dataset 4. Used for PCA comparison (Figure S2). |
+| `allsamples_lifted_to_jaAcrPala1.3_conffiltered_indvmissfiltered_downsampled_maffiltered_ldfiltered.vcf.gz` | Dataset 4 | Fully filtered: probes, CONF, site/sample missingness, LD-pruned, MAF > 0.05, geographically downsampled (≤ 60 genets/region). |
+| `allsamples_lifted_to_jaAcrPala1.3_noconf_indvmissfiltered_maffiltered.vcf.gz` | Dataset 6 | No CONF filter. Otherwise same as dataset 4. |
 
 ---
 
