@@ -23,8 +23,8 @@ by the between-subregion contrast (a step, not a slope), which is why the manusc
 tests IBD within each linear habitat instead.
 
 Inputs (paths follow 03_ibd_analysis.ipynb; set the env vars below):
-  APAL_PROJECT_DIR  folder with processed_data_03_apal_ibd_samples.tsv and
-                    processed_data_03a_apal_ibd_fst_greater_antilles.tsv
+  APAL_PROJECT_DIR  folder with apal_ibd_samples.tsv and
+                    ibd_fst_greater_antilles.tsv
   APAL_DATA_DIR     folder with mac_ld.gt_matrix.int8.npz
                     (generate it from dataset 3 with scripts/convert_vcf_to_npz.py)
 Output: $APAL_OUT_DIR/pooled  (default <project>/output/ibd_robustness/pooled)
@@ -46,8 +46,8 @@ DATA_DIR = Path(os.environ.get("APAL_DATA_DIR", PROJECT_DIR / "datasets"))
 RESULTS_DIR = Path(os.environ.get("APAL_OUT_DIR", PROJECT_DIR / "output" / "ibd_robustness"))
 
 NPZ_PATH = DATA_DIR / "mac_ld.gt_matrix.int8.npz"
-SAMPLES_TSV = PROJECT_DIR / "processed_data_03_apal_ibd_samples.tsv"
-FST_GA_TSV = PROJECT_DIR / "processed_data_03a_apal_ibd_fst_greater_antilles.tsv"
+SAMPLES_TSV = PROJECT_DIR / "apal_ibd_samples.tsv"
+FST_GA_TSV = PROJECT_DIR / "ibd_fst_greater_antilles.tsv"
 OUT_DIR = RESULTS_DIR / "pooled"
 
 MAF_THRESH = 0.05  # regional MAF, matching REGIONAL_MAF_MIN in the published notebook

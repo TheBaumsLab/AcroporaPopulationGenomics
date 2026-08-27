@@ -24,9 +24,9 @@ Design decisions
 
 Inputs (paths follow 03_ibd_analysis.ipynb; set the env vars below):
   APAL_PROJECT_DIR  folder with the deposited IBD tables:
-                      processed_data_03_apal_ibd_samples.tsv
-                      processed_data_03a_apal_ibd_fst_greater_antilles.tsv
-                      processed_data_03b_apal_ibd_fst_florida.tsv
+                      apal_ibd_samples.tsv
+                      ibd_fst_greater_antilles.tsv
+                      ibd_fst_florida.tsv
   APAL_DATA_DIR     folder with the genotype cache mac_ld.gt_matrix.int8.npz
                     (generate it from dataset 3 with scripts/convert_vcf_to_npz.py)
 Outputs (written to $APAL_OUT_DIR/sensitivity, default <project>/output/ibd_robustness):
@@ -51,9 +51,9 @@ DATA_DIR = Path(os.environ.get("APAL_DATA_DIR", PROJECT_DIR / "datasets"))
 RESULTS_DIR = Path(os.environ.get("APAL_OUT_DIR", PROJECT_DIR / "output" / "ibd_robustness"))
 
 NPZ_PATH = DATA_DIR / "mac_ld.gt_matrix.int8.npz"
-SAMPLES_TSV = PROJECT_DIR / "processed_data_03_apal_ibd_samples.tsv"
-FST_GA_TSV = PROJECT_DIR / "processed_data_03a_apal_ibd_fst_greater_antilles.tsv"
-FST_FL_TSV = PROJECT_DIR / "processed_data_03b_apal_ibd_fst_florida.tsv"
+SAMPLES_TSV = PROJECT_DIR / "apal_ibd_samples.tsv"
+FST_GA_TSV = PROJECT_DIR / "ibd_fst_greater_antilles.tsv"
+FST_FL_TSV = PROJECT_DIR / "ibd_fst_florida.tsv"
 OUT_DIR = RESULTS_DIR / "sensitivity"
 
 # published pairwise tables, used both for validation and for fixed geography
