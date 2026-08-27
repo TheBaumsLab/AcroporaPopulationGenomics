@@ -1,18 +1,19 @@
-# AcroporaPopulationGenomics
+## _Acropora palmata_ population genomics
 
 Code and data accompanying:
 
 > **Population structure and gene flow in the endangered Caribbean reef-building coral, *Acropora palmata***  
 > Iliana B. Baums, Nicolas S. Locatelli, Kim L. de Luca, Sheila A. Kitchen  
 
-Raw genotype calls and full sample metadata are available through the STAGdb Galaxy resource at [coralsnp.uol.de](https://coralsnp.uol.de). Datasets are available in gzip-compressed VCF format at [coralsnp.uol.de/galaxy/libraries](https://coralsnp.uol.de/galaxy/libraries) under "Acropora palmata popgen datasets".
+Raw genotype calls and full sample metadata are available through the STAGdb Galaxy resource at [coralsnp.uol.de](https://coralsnp.uol.de). Datasets (in gzip-compressed VCF format) and tables are available at [coralsnp.uol.de/galaxy/libraries](https://coralsnp.uol.de/galaxy/libraries) under "Acropora palmata popgen datasets". 
+
+A Zenodo archive accompanying this manuscript is published at [10.5281/zenodo.22091015](10.5281/zenodo.22091015). 
 
 ---
 
-## Repository structure
+### Repository structure
 
 ```
-├── filtered_calls/          # Filtered VCF files (datasets 4 & 6, see below)
 ├── popgen_notebooks/        # Analysis notebooks
 ├── scripts/                 # Shared Python utilities
 ├── slurm/                   # SLURM submission scripts (ADMIXTURE, STRUCTURE, liftover)
@@ -22,22 +23,30 @@ Raw genotype calls and full sample metadata are available through the STAGdb Gal
 
 ---
 
-## Datasets
+### Datasets
 
-The manuscript describes six datasets produced by progressive filtering of the raw STAGdb VCF. The two VCF files in `filtered_calls/` correspond to:
+| Dataset | SNPs | Samples | Filtering applied | Purpose |
+|---|---:|---:|---|---|
+| 0 | 18,898 | 3,925 | All analyzed *A. palmata* samples from STAGdb, corresponding to 1,432 genets. SNPs restricted to the recommended genotyping probe set and lifted over to assembly jaAcrPala1.3. | Full sample-level dataset, in accordance with Table 1 and Table S1. |
+| 1 | 18,898 | 1,432 | Retaining one sample per genet. | Genet-level dataset entering downstream analyses. |
+| 2 | 18,258 | 1,366 | Removal of low quality genotypes (CONF > 0.01), sites with >10% missing data, and samples with >5% missing data. | Building site-level kinship distributions. |
+| 3 | 5,555 | 955 | As dataset 2, plus minor allele count >3, linkage pruning (r² < 0.5 in 100 kb windows), removal of samples above a KING kinship threshold of 0.08834 (second-degree or closer kin), and samples with heterozygosity >3 standard deviations below the mean. | Parent dataset for isolation-by-distance analyses. |
+| 3a | 3,162 | 305 | As dataset 3, restricted to wild samples of the Greater Antilles; sites within 10 km merged; sites with ≥5 genets retained; regional MAF ≥ 0.05 recomputed on the retained panel. | Isolation by distance, Greater Antilles. |
+| 3b | 3,185 | 139 | As dataset 3, restricted to wild samples of the Florida Reef Tract; sites within 10 km merged; sites with ≥5 genets retained; regional MAF ≥ 0.05 recomputed on the retained panel. | Isolation by distance, Florida Reef Tract. |
+| 4 | 3,215 | 554 | As dataset 2, plus minor allele frequency >0.05, sequential stratified random sampling to reduce bias from uneven sampling, linkage pruning (r² < 0.5 in 100 kb windows), removal of samples above a KING kinship threshold of 0.08834 (second-degree or closer kin), and samples with heterozygosity >3 standard deviations below the mean. | Population structure analyses (PCA, STRUCTURE/ADMIXTURE, *Fst*, *F*, heterozygosity). |
+| 5 | 25,362 | 1,268 | Raw dataset, with only kinship and MAF > 0.05 filtering applied and without restricting SNPs to the recommended probe set. Many SNPs are duplicated, as a single SNP can be tiled by multiple probes. | Illustrating the importance of rigorous filtering for population genetic datasets derived from microarray data. |
+| 6 | 3,468 | 555 | As dataset 4, without filtering for low quality genotypes (CONF). | Illustrating the importance of microarray-specific CONF filtering, which has no equivalent in sequencing data. |
 
-| File | Dataset | Description |
-|---|---|---|
-| `allsamples_lifted_to_jaAcrPala1.3_conffiltered_indvmissfiltered_downsampled_maffiltered_ldfiltered.vcf.gz` | Dataset 4 | Fully filtered: probes, CONF, site/sample missingness, LD-pruned, MAF > 0.05, geographically downsampled (≤ 60 genets/region). |
-| `allsamples_lifted_to_jaAcrPala1.3_noconf_indvmissfiltered_maffiltered.vcf.gz` | Dataset 6 | No CONF filter. Otherwise same as dataset 4. |
+Dataset 0 carries genotype (GT) calls only. Per-genotype quality fields (CONF, BAF, LRR, NORMX, NORMY, DELTA, SIZE) are stored per genet representative in STAGdb, not per colony, and are unavailable for the 2,493 colonies that are not representatives. Dataset 1 and all downstream datasets carry the full FORMAT fields.
+
 
 ---
 
-## Notebooks
+### Notebooks
 
 All notebooks are in `popgen_notebooks/`.
 
-### SNP chip analysis
+#### SNP chip analysis
 
 | Notebook | Analysis |
 |---|---|
@@ -53,17 +62,25 @@ All notebooks are in `popgen_notebooks/`.
 | `01_sample_summary.ipynb` | Sample inventory by region; flags facility/nursery samples (`is_facility`); region-level summary table |
 | `02_fst_migrants.ipynb` | Pairwise FST between regions; migration rate estimates under Wright's island model (Nm) Table S2 |
 | `03_ibd_analysis.ipynb` | Isolation-by-distance along the Greater Antilles and Florida Reef Tract; site merging, regional MAF filtering, OLS regression, Mantel test, combined IBD figure (Figure 3); writes `apal_ibd_samples.tsv`, `ibd_fst_greater_antilles.tsv`, `ibd_fst_florida.tsv` |
+| `03_ibd_subsampling_sensitivity.py` | Balanced-resampling sensitivity test for the IBD signal: draws 5 genets per site × 100 iterations and recomputes pairwise FST and the Mantel/OLS statistics per replicate |
+| `03_ibd_pooled_all_sites.py` | Pooled all-sites IBD |
+| `03_ibd_robustness_figures.py` | Supplementary figures for the two IBD robustness analyses above |
 
-Notebooks 01–03 require setting the following environment variables before launching Jupyter:
+Notebooks 01–03 and the three `03_ibd_*.py` scripts use these environment variables (set them before launching Jupyter or running the scripts):
 
 ```bash
-export APAL_PROJECT_DIR=/path/to/your/project   # directory containing table_S1_metadata.tsv
-export APAL_DATA_DIR=/path/to/your/data         # directory containing the .npz genotype cache
+export APAL_PROJECT_DIR=/path/to/your/project   # tables: table_metadata.tsv, apal_ibd_samples.tsv, ibd_fst_*.tsv
+export APAL_DATA_DIR=/path/to/your/data         # the .npz genotype cache
+export APAL_OUT_DIR=/path/to/output             # optional; where the 03_ibd_*.py scripts write results/figures
+                                                # (default: <project>/output/ibd_robustness)
 ```
+
+The `03_ibd_*.py` scripts are run from the command line and read the tables written by `03_ibd_analysis.ipynb`. 
+First run `03_ibd_subsampling_sensitivity.py` and `03_ibd_pooled_all_sites.py`, then `03_ibd_robustness_figures.py`.
 
 ---
 
-## Scripts
+### Scripts
 
 | Script | Description |
 |---|---|
@@ -73,7 +90,7 @@ export APAL_DATA_DIR=/path/to/your/data         # directory containing the .npz 
 
 ---
 
-## Requirements
+### Requirements
 
 Python dependencies are listed in `requirements.txt`. Install with:
 
@@ -89,7 +106,8 @@ One additional tool is required but not pip-installable:
 
 ---
 
-## Citations
+### Citations
 
-> Baums IB _et al_. (2026) Population structure and gene flow in the endangered Caribbean reef-building coral, *Acropora palmata*. https://doi.org/10.64898/2026.04.15.718759  
+> Baums IB _et al_. (2026) Population structure and gene flow in the endangered Caribbean reef-building coral, *Acropora palmata*. https://doi.org/10.64898/2026.04.15.718759
+ 
 > Kitchen SA _et al_. (2020) STAGdb: a 30K SNP genotyping array and interactive database for *Acropora* corals and their dinoflagellate symbionts. *Scientific Reports* 10, 12488. https://doi.org/10.1038/s41598-020-69101-z
