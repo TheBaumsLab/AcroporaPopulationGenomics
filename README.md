@@ -5,14 +5,13 @@ Code and data accompanying:
 > **Population structure and gene flow in the endangered Caribbean reef-building coral, *Acropora palmata***  
 > Iliana B. Baums, Nicolas S. Locatelli, Kim L. de Luca, Sheila A. Kitchen  
 
-Raw genotype calls and full sample metadata are available through the STAGdb Galaxy resource at [coralsnp.uol.de](https://coralsnp.uol.de). Datasets are available in gzip-compressed VCF format at [coralsnp.uol.de/galaxy/libraries](https://coralsnp.uol.de/galaxy/libraries) under "Acropora palmata popgen datasets".
+Raw genotype calls and full sample metadata are available through the STAGdb Galaxy resource at [coralsnp.uol.de](https://coralsnp.uol.de). Datasets (in gzip-compressed VCF format) and tables are available at [coralsnp.uol.de/galaxy/libraries](https://coralsnp.uol.de/galaxy/libraries) under "Acropora palmata popgen datasets". A Zenodo archive accompanying this manuscript is published at [10.5281/zenodo.22091015](10.5281/zenodo.22091015). 
 
 ---
 
 ## Repository structure
 
 ```
-├── filtered_calls/          # Filtered VCF files (datasets 4 & 6, see below)
 ├── popgen_notebooks/        # Analysis notebooks
 ├── scripts/                 # Shared Python utilities
 ├── slurm/                   # SLURM submission scripts (ADMIXTURE, STRUCTURE, liftover)
@@ -24,12 +23,20 @@ Raw genotype calls and full sample metadata are available through the STAGdb Gal
 
 ## Datasets
 
-The manuscript describes six datasets produced by progressive filtering of the raw STAGdb VCF. The two VCF files in `filtered_calls/` correspond to:
+| Dataset | SNPs | Samples | Filtering applied | Purpose |
+|---|---:|---:|---|---|
+| 0 | 18,898 | 3,925 | All analyzed *A. palmata* samples from STAGdb, corresponding to 1,432 genets. SNPs restricted to the recommended genotyping probe set and lifted over to assembly jaAcrPala1.3. | Full sample-level dataset, in accordance with Table 1 and Table S1. |
+| 1 | 18,898 | 1,432 | Retaining one sample per genet. | Genet-level dataset entering downstream analyses. |
+| 2 | 18,258 | 1,366 | Removal of low quality genotypes (CONF > 0.01), sites with >10% missing data, and samples with >5% missing data. | Building site-level kinship distributions. |
+| 3 | 5,555 | 955 | As dataset 2, plus minor allele count >3, linkage pruning (r² < 0.5 in 100 kb windows), removal of samples above a KING kinship threshold of 0.08834 (second-degree or closer kin), and samples with heterozygosity >3 standard deviations below the mean. | Parent dataset for isolation-by-distance analyses. |
+| 3a | 3,162 | 305 | As dataset 3, restricted to wild samples of the Greater Antilles; sites within 10 km merged; sites with ≥5 genets retained; regional MAF ≥ 0.05 recomputed on the retained panel. | Isolation by distance, Greater Antilles (Figure 3). |
+| 3b | 3,185 | 139 | As dataset 3, restricted to wild samples of the Florida Reef Tract; sites within 10 km merged; sites with ≥5 genets retained; regional MAF ≥ 0.05 recomputed on the retained panel. | Isolation by distance, Florida Reef Tract (Figure 3). |
+| 4 | 3,215 | 554 | As dataset 2, plus minor allele frequency >0.05, sequential stratified random sampling to reduce bias from uneven sampling, linkage pruning (r² < 0.5 in 100 kb windows), removal of samples above a KING kinship threshold of 0.08834 (second-degree or closer kin), and samples with heterozygosity >3 standard deviations below the mean. | Population structure analyses (PCA, STRUCTURE/ADMIXTURE, *F*~ST~, *F*, heterozygosity). |
+| 5 | 25,362 | 1,268 | Raw dataset, with only kinship and MAF > 0.05 filtering applied and without restricting SNPs to the recommended probe set. Many SNPs are duplicated, as a single SNP can be tiled by multiple probes. | Illustrating the importance of rigorous filtering for population genetic datasets derived from microarray data. |
+| 6 | 3,468 | 555 | As dataset 4, without filtering for low quality genotypes (CONF). | Illustrating the importance of microarray-specific CONF filtering, which has no equivalent in sequencing data. |
 
-| File | Dataset | Description |
-|---|---|---|
-| `allsamples_lifted_to_jaAcrPala1.3_conffiltered_indvmissfiltered_downsampled_maffiltered_ldfiltered.vcf.gz` | Dataset 4 | Fully filtered: probes, CONF, site/sample missingness, LD-pruned, MAF > 0.05, geographically downsampled (≤ 60 genets/region). |
-| `allsamples_lifted_to_jaAcrPala1.3_noconf_indvmissfiltered_maffiltered.vcf.gz` | Dataset 6 | No CONF filter. Otherwise same as dataset 4. |
+Dataset 0 carries genotype (GT) calls only. Per-genotype quality fields (CONF, BAF, LRR, NORMX, NORMY, DELTA, SIZE) are stored per genet representative in STAGdb, not per colony, and are unavailable for the 2,493 colonies that are not representatives. Dataset 1 and all downstream datasets carry the full FORMAT fields.
+
 
 ---
 
